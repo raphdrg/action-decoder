@@ -29,10 +29,13 @@ def train(config_path: str = "config.yaml"):
 
     dataloader = get_dataloader(config_path)
     T = cfg["num_timesteps"]
+    accum_steps = cfg.get("grad_accum_steps", 1)
 
     for epoch in range(cfg["num_epochs"]):
         epoch_loss = 0.0
         num_batches = 0
+
+        optimizer.zero_grad()
 
         for x_0 in dataloader:
             x_0 = x_0.to(device)
@@ -48,14 +51,15 @@ def train(config_path: str = "config.yaml"):
             # Predict noise
             epsilon_hat = model(x_t, t)
 
-            loss = loss_fn(epsilon_hat, noise)
-
-            optimizer.zero_grad()
+            loss = loss_fn(epsilon_hat, noise) / accum_steps
             loss.backward()
-            optimizer.step()
 
-            epoch_loss += loss.item()
             num_batches += 1
+            epoch_loss += loss.item() * accum_steps
+
+            if num_batches % accum_steps == 0:
+                optimizer.step()
+                optimizer.zero_grad()
 
         avg_loss = epoch_loss / num_batches
         print(f"Epoch {epoch+1}/{cfg['num_epochs']}  loss: {avg_loss:.6f}")
