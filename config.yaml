@@ -1,0 +1,16 @@
+# === Diffusion ===
+num_timesteps: 1000
+
+# === Model ===
+image_size: 256
+image_channels: 3
+patch_size: 16         # image_size must be divisible by patch_size
+latent_dim: 256        # dimension of patch latent vectors
+num_transformer_blocks: 1
+num_heads: 8
+mlp_hidden_dim: 512    # hidden dim inside transformer MLP
+
+# === Training ===
+batch_size: 32
+learning_rate: 1.0e-4
+num_epochs: 100
